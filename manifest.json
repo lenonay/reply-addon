@@ -16,7 +16,7 @@
     },
     "permissions": [
       "messagesRead",
-      "messagesmodify",
+      "messagesModify",
       "accountsRead",
       "compose"
     ]
