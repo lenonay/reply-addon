@@ -36,17 +36,17 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 originalMessageId = originalMessageId.replace(/^<|>$/g, '');
                 console.log("Message-ID original:", originalMessageId);
 
-                // Buscar carpeta de enviados
-                let accounts = await browser.accounts.list();
+                // // Buscar carpeta de enviados
+                // let accounts = await browser.accounts.list();
 
-                // Usamos la cuenta que queremos en caso de que haya más
-                let targetAccount = accounts.find(account => account.name == cuenta);
+                // // Usamos la cuenta que queremos en caso de que haya más
+                // let targetAccount = accounts.find(account => account.name == cuenta);
 
-                if(!targetAccount) {
-                    console.log("No se ha encontrado la cuenta seleccionada", cuenta)
+                // if(!targetAccount) {
+                //     console.log("No se ha encontrado la cuenta seleccionada", cuenta)
 
-                    return null;
-                }
+                //     return null;
+                // }
 
                 console.log("Buscando el mensaje original...");
                 // Buscar el mensaje original
@@ -67,7 +67,8 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
 
                 console.log("Contenido del mensaje original: ", fullOriginal);
 
-                let attachments = fullOriginal.parts.filter(att => 
+                // Sacamos los adjuntos que sean pdf
+                let attachments = fullOriginal.parts.parts.filter(att => 
                     att.contentType.toLowerCase() === "application/pdf"
                 );
 
@@ -80,7 +81,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 console.log("PDF encontrado:", pdfAttachment);
 
                 return;
-                //////////////////////////////
+                ////////////////////////////// End HERE
 
                 // Obtener el archivo adjunto
                 let file = await browser.messages.getFileAttachment(originalMsg.id, pdfAttachment.partName);
