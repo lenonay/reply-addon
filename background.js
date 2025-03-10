@@ -79,7 +79,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                let identityId;
 
                 // Sacamos el correo origen del correo inicial
-                let rawOriginalMail = originalMsg.headers.from[0].split(" ").pop();
+                let rawOriginalMail = fullOriginal.headers.from[0].split(" ").pop();
 
                 let originalMail = rawOriginalMail.replace(/^<|>$/g, '');
 
@@ -104,7 +104,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
 
                 // Configurar los detalles del nuevo correo
                 let composeDetails = {
-                    to: [originalMsg.to[0]], // Enviar al destinatario original
+                    to: [fullOriginal.to[0]], // Enviar al destinatario original
                     subject: "Reenvío de factura",
                     body: "Estimado cliente,\n\nAdjunto nuevamente la factura solicitada.\n\nSaludos cordiales.",
                     attachments: [{
