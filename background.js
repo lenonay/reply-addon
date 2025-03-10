@@ -32,9 +32,6 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 let inReplyToHeader = fullMessage.headers["in-reply-to"];
                 console.log("In-Reply-To:", inReplyToHeader);
 
-                let fullMessage = await browser.messages.getFull(message.id);
-                let inReplyToHeader = fullMessage.headers["in-reply-to"];
-
                 if (!inReplyToHeader) {
                     console.log("Falta encabezado 'In-Reply-To'.");
                     continue;
