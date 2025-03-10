@@ -58,7 +58,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 let accounts = await browser.accounts.list();
 
                 // Usamos la cuenta que queremos en caso de que haya más
-                let targetAccount = accounts.find(account => accounts.name == cuenta);
+                let targetAccount = accounts.find(account => account.name == cuenta);
 
                 if(!targetAccount) {
                     console.log("No se ha encontrado la cuenta seleccionada", cuenta)
