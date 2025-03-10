@@ -68,7 +68,9 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 console.log("Contenido del mensaje original: ", fullOriginal);
 
                 // Sacamos los adjuntos que sean pdf
-                let attachments = fullOriginal.parts.parts.filter(att => 
+                let parts_array = fullOriginal.parts[0]
+
+                let attachments = parts_array.filter(att => 
                     att.contentType.toLowerCase() === "application/pdf"
                 );
 
