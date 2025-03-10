@@ -1,4 +1,7 @@
 // background.js
+//Variables globales
+const cuenta = "diegolagerms@gmail.com";
+const destino = "gmr@virtucan.es";
 
 // Función recursiva para buscar la carpeta de enviados
 function findSentFolder(folder) {
@@ -12,6 +15,10 @@ function findSentFolder(folder) {
         }
     }
     return null;
+}
+
+function findOriginalMessage(_browser, account){
+
 }
 
 
@@ -50,22 +57,18 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 // Buscar carpeta de enviados
                 let accounts = await browser.accounts.list();
 
-                console.log("Cuentas", accounts);
+                // Usamos la cuenta que queremos en caso de que haya más
+                let targetAccount = accounts.find(account => accounts.name == cuenta);
 
-                let sentFolder = null;
-                for (let account of accounts) {
-                    sentFolder = findSentFolder(account.folders);
-                    if (sentFolder) break;
+                if(!targetAccount) {
+                    console.log("No se ha encontrado la cuenta seleccionada", cuenta)
+
+                    return null;
                 }
 
-                if (!sentFolder) {
-                    console.log("No se encontró la carpeta de enviados.");
-                    continue;
-                }
-
+                console.log("Buscando el mensaje original...");
                 // Buscar el mensaje original
                 let result = await browser.messages.query({
-                    folder: sentFolder,
                     headerMessageId: originalMessageId
                 });
 
