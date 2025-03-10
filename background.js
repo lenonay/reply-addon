@@ -20,10 +20,12 @@ browser.messages.onNewMailReceived.addListener(async (folder, messageIds) => {
     console.log("Nuevo mensaje detectado en carpeta:", folder.name);
 
     for (let msgId of messageIds) {
+        console.log(msgId);
         try {
-            // Obtener el mensaje completo a partir del ID
-            let message = await browser.messages.get(msgId);
-            console.log("Asunto del mensaje entrante:", message.subject);
+            // Obtener el mensaje completo
+            let message = await browser.messages.get(msgId); 
+            console.log(message);
+            console.log("Asunto:", message.subject);
 
             if (message.subject && message.subject.includes("Underivable:")) {
                 console.log("Mensaje Underivable detectado:", message.subject);
