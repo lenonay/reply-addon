@@ -72,12 +72,14 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 console.log("PDF encontrado:", pdfAttachment);
 
                // Descargar el archivo adjunto como un objeto File
-               let file = await browser.messages.getAttachmentFile(originalMessage.id, pdfAttachment.partName);
+               let file = await browser.messages.getAttachmentFile(originalMsg.id, pdfAttachment.partName);
 
                // Obtener la identidad (cuenta) desde la cual se enviará el correo
                let accounts = await browser.accounts.list();
                let identityId;
                for (let account of accounts) {
+                    console.log("Cuentas", accounts);
+
                    for (let identity of account.identities) {
                        if (identity.email.toLowerCase() === originalMessage.author.toLowerCase()) {
                            identityId = identity.id;
