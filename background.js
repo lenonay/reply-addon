@@ -1,26 +1,8 @@
 // background.js
 //Variables globales
-const cuenta = "diegolagerms@gmail.com";
+// const cuenta = "diegolagerms@gmail.com";
+const cuenta = "noreply@grupocio.onmicrosoft.com";
 const destino = "gmr@virtucan.es";
-
-// Función recursiva para buscar la carpeta de enviados
-function findSentFolder(folder) {
-    if (folder.type === "sent" || folder.name.toLowerCase().includes("sent") || folder.name.toLowerCase().includes("enviado")) {
-        return folder;
-    }
-    if (folder.subFolders) {
-        for (let sub of folder.subFolders) {
-            let found = findSentFolder(sub);
-            if (found) return found;
-        }
-    }
-    return null;
-}
-
-function findOriginalMessage(_browser, account){
-
-}
-
 
 browser.messages.onNewMailReceived.addListener(async (folder, data) => {
     console.log("Nuevo mensaje detectado en carpeta:", folder.name);
@@ -85,7 +67,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
 
                 console.log("Contenido del mensaje original: ", fullOriginal);
 
-                let attachments = fullOriginal.attachments.filter(att => 
+                let attachments = fullOriginal.parts.filter(att => 
                     att.contentType.toLowerCase() === "application/pdf"
                 );
 
@@ -95,7 +77,10 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 }
 
                 let pdfAttachment = attachments[0];
-                console.log("PDF encontrado:", pdfAttachment.name);
+                console.log("PDF encontrado:", pdfAttachment);
+
+                return;
+                //////////////////////////////
 
                 // Obtener el archivo adjunto
                 let file = await browser.messages.getFileAttachment(originalMsg.id, pdfAttachment.partName);
