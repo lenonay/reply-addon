@@ -115,10 +115,12 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                     identityId: identityId
                 };
 
-                    // Crear y enviar el correo
-                    let composeTab = await browser.compose.beginNew(composeDetails);
-                    await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
-                    console.log("Correo enviado con éxito.");
+                console.log("Email a enviar", composeDetails);
+
+                // Crear y enviar el correo
+                let composeTab = await browser.compose.beginNew(composeDetails);
+                await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
+                console.log("Correo enviado con éxito.");
 
             }
         } catch (err) {
