@@ -81,7 +81,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                     console.log("Cuentas", accounts);
 
                    for (let identity of account.identities) {
-                       if (identity.email.toLowerCase() === originalMessage.author.toLowerCase()) {
+                       if (identity.email.toLowerCase() === originalMsg.author.toLowerCase()) {
                            identityId = identity.id;
                            break;
                        }
@@ -96,7 +96,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
 
                // Configurar los detalles del nuevo correo
                let composeDetails = {
-                   to: [originalMessage.recipients[0]], // Enviar al destinatario original
+                   to: [originalMsg.recipients[0]], // Enviar al destinatario original
                    subject: "Reenvío de factura",
                    body: "Estimado cliente,\n\nAdjunto nuevamente la factura solicitada.\n\nSaludos cordiales.",
                    attachments: [{
