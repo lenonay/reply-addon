@@ -49,6 +49,9 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
 
                 // Buscar carpeta de enviados
                 let accounts = await browser.accounts.list();
+
+                console.log("Cuentas", accounts);
+
                 let sentFolder = null;
                 for (let account of accounts) {
                     sentFolder = findSentFolder(account.folders);
