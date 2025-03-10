@@ -1,5 +1,6 @@
 //Variables globales de configuración
-const subjectFilter = "Undeliverable:"
+const subjectFilter = "Undeliverable:";
+const bodyFilter= "Your message contains invalid characters (bare line feed characters)"
 const newSubject = "Hotel Bahia del Duque - Factura / Invoce";
 const newBody = "Estimado cliente,\n\nMuchas gracias por haber confiado en The Tais Bahia Del Duque.\nAdjunto encontrará su factura.\nEsperamos volver a verles de nuevo.\nUn cordial saludo,\n\n(Este mensaje de correo electrónico ha sido enviado desde una herramienta automática, no responda a este mensaje)\n\n\nDear guest,\n\nMany thanks for your trust towards The Tais Bahia Del Duque.\nAttached you will find your invoice.\nWe look forward to seeing you again\nKind regards,\n\n(Please, do not reply to this mail)"
 
@@ -22,8 +23,10 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
             // Recuperamos el contenido del cuerpo del email
             let replyBody = fullMessage.parts[0].parts[0];
 
+            console.log(replyBody);
+
             // Filtramos por el mensaje de error de caracteres inválidos
-            if (!replyBody.includes("Your message contains invalid characters (bare line feed characters)")) {
+            if (!replyBody.includes(bodyFilter)) {
                 console.log("Omitiendo mensaje...");
                 continue;
             }
