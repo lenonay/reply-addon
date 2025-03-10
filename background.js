@@ -110,7 +110,6 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                     attachments: [{
                         file: file,
                         name: pdfAttachment.name,
-                        contentType: pdfAttachment.contentType
                     }],
                     identityId: identityId
                 };
