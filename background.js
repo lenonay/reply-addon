@@ -71,9 +71,28 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 let pdfAttachment = attachments[0];
                 console.log("PDF encontrado:", pdfAttachment);
 
+                // Obtener el archivo adjunto como objeto File
+                let file = await browser.messages.getAttachmentFile(originalMsg.id, pdfAttachment.partName);
 
-                let pdfFile = await browser.messages.getAttachmentFile(originalMsg.id, pdfAttachment.partName);
+                // Obtener la lista de cuentas y sus identidades
+                let accounts = await browser.accounts.list();
+                let identityId = null;
 
+                // Buscar la identidad que coincide con la dirección de correo del destinatario original
+                for (let account of accounts) {
+                    for (let identity of account.identities) {
+                        if (identity.email.toLowerCase() === originalMsg.author.toLowerCase()) {
+                            identityId = identity.id;
+                            break;
+                        }
+                    }
+                    if (identityId) break;
+                }
+
+                if (!identityId) {
+                    console.log("No se encontró una identidad que coincida con el autor del mensaje original.");
+                    continue;
+                }
 
                 // Configurar los detalles del nuevo correo
                 let composeDetails = {
@@ -81,10 +100,11 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                     subject: "Reenvío de PDF",
                     body: "Adjunto el PDF solicitado.",
                     attachments: [{
-                        file: pdfFile,
+                        file: file,
                         name: pdfAttachment.name,
                         contentType: pdfAttachment.contentType
-                    }]
+                    }],
+                    identityId: identityId
                 };
 
                 // Crear y enviar el correo
