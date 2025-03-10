@@ -36,18 +36,6 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 originalMessageId = originalMessageId.replace(/^<|>$/g, '');
                 console.log("Message-ID original:", originalMessageId);
 
-                // // Buscar carpeta de enviados
-                // let accounts = await browser.accounts.list();
-
-                // // Usamos la cuenta que queremos en caso de que haya más
-                // let targetAccount = accounts.find(account => account.name == cuenta);
-
-                // if(!targetAccount) {
-                //     console.log("No se ha encontrado la cuenta seleccionada", cuenta)
-
-                //     return null;
-                // }
-
                 console.log("Buscando el mensaje original...");
                 // Buscar el mensaje original
                 let result = await browser.messages.query({
@@ -76,21 +64,20 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
 
                 if (attachments.length === 0) {
                     console.log("No hay PDF adjunto.");
-                    continue;
+                    return;
+                    // Se puede hacer que si no se encuentra el archivo que se revise de forma manual
                 }
 
                 let pdfAttachment = attachments[0];
                 console.log("PDF encontrado:", pdfAttachment);
 
-                return;
-                ////////////////////////////// End HERE
 
-                // Obtener el archivo adjunto
-                let file = await browser.messages.getFileAttachment(originalMsg.id, pdfAttachment.partName);
+                let pdfFile = await browser.messages.getAttachmentFile(originalMsg.id, pdfAttachment.partName);
 
-                // Configurar el nuevo correo
+
+                // Configurar los detalles del nuevo correo
                 let composeDetails = {
-                    to: "gmr@virtucan.es",
+                    to: [destino],
                     subject: "Reenvío de PDF",
                     body: "Adjunto el PDF solicitado.",
                     attachments: [{
@@ -103,7 +90,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 // Crear y enviar el correo
                 let composeTab = await browser.compose.beginNew(composeDetails);
                 await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
-                console.log("Correo enviado con éxito.");   
+                console.log("Correo enviado con éxito.");
 
             }
         } catch (err) {
