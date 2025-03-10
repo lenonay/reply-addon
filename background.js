@@ -77,40 +77,48 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                // Obtener la identidad (cuenta) desde la cual se enviará el correo
                let accounts = await browser.accounts.list();
                let identityId;
-               for (let account of accounts) {
-                    console.log("Cuentas", accounts);
+
+                // Sacamos el correo origen del correo inicial
+                let rawOriginalMail = originalMsg.headers.from[0].split(" ").pop();
+
+                let originalMail = rawOriginalMail.replace(/^<|>$/g, '');
+
+                console.log("Cuentas", accounts);
+                console.log(originalMail);
+
+                for (let account of accounts) {
 
                    for (let identity of account.identities) {
-                       if (identity.email.toLowerCase() === originalMsg.author.toLowerCase()) {
+                       if (identity.email.toLowerCase() === originalMail) {
                            identityId = identity.id;
                            break;
                        }
                    }
                    if (identityId) break;
-               }
+                }
 
-               if (!identityId) {
+                if (!identityId) {
                    console.log("No se encontró una identidad que coincida con el autor del mensaje original.");
                    continue;
-               }
+                }
 
-               // Configurar los detalles del nuevo correo
-               let composeDetails = {
-                   to: [originalMsg.recipients[0]], // Enviar al destinatario original
-                   subject: "Reenvío de factura",
-                   body: "Estimado cliente,\n\nAdjunto nuevamente la factura solicitada.\n\nSaludos cordiales.",
-                   attachments: [{
-                       file: file,
-                       name: pdfAttachment.name,
-                       contentType: pdfAttachment.contentType
-                   }],
-                   identityId: identityId
-               };
+                // Configurar los detalles del nuevo correo
+                let composeDetails = {
+                    to: [originalMsg.to[0]], // Enviar al destinatario original
+                    subject: "Reenvío de factura",
+                    body: "Estimado cliente,\n\nAdjunto nuevamente la factura solicitada.\n\nSaludos cordiales.",
+                    attachments: [{
+                        file: file,
+                        name: pdfAttachment.name,
+                        contentType: pdfAttachment.contentType
+                    }],
+                    identityId: identityId
+                };
 
-                // Crear y enviar el correo
-                let composeTab = await browser.compose.beginNew(composeDetails);
-                await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
-                console.log("Correo enviado con éxito.");
+                    // Crear y enviar el correo
+                    let composeTab = await browser.compose.beginNew(composeDetails);
+                    await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
+                    console.log("Correo enviado con éxito.");
 
             }
         } catch (err) {
