@@ -1,8 +1,6 @@
 // background.js
 //Variables globales
-// const cuenta = "diegolagerms@gmail.com";
-const cuenta = "noreply@grupocio.onmicrosoft.com";
-const destino = "gmr@virtucan.es";
+const subjectFilter = "Undeliverable:"
 
 browser.messages.onNewMailReceived.addListener(async (folder, data) => {
     console.log("Nuevo mensaje detectado en carpeta:", folder.name);
