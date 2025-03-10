@@ -11,7 +11,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
         try {
             console.log("Procesando mensaje con asunto:", message.subject);
             
-            if (message.subject && message.subject.includes("Underivable:")) {
+            if (message.subject && message.subject.includes(subjectFilter)) {
                 console.log("Mensaje Underivable detectado:", message.subject);
                 
                 console.log("Pre recuperar el mensaje completo");
