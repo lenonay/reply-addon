@@ -71,41 +71,39 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 let pdfAttachment = attachments[0];
                 console.log("PDF encontrado:", pdfAttachment);
 
-                // Obtener el archivo adjunto como objeto File
-                let file = await browser.messages.getAttachmentFile(originalMsg.id, pdfAttachment.partName);
+               // Descargar el archivo adjunto como un objeto File
+               let file = await browser.messages.getAttachmentFile(originalMessage.id, pdfAttachment.partName);
 
-                // Obtener la lista de cuentas y sus identidades
-                let accounts = await browser.accounts.list();
-                let identityId = null;
+               // Obtener la identidad (cuenta) desde la cual se enviará el correo
+               let accounts = await browser.accounts.list();
+               let identityId;
+               for (let account of accounts) {
+                   for (let identity of account.identities) {
+                       if (identity.email.toLowerCase() === originalMessage.author.toLowerCase()) {
+                           identityId = identity.id;
+                           break;
+                       }
+                   }
+                   if (identityId) break;
+               }
 
-                // Buscar la identidad que coincide con la dirección de correo del destinatario original
-                for (let account of accounts) {
-                    for (let identity of account.identities) {
-                        if (identity.email.toLowerCase() === originalMsg.author.toLowerCase()) {
-                            identityId = identity.id;
-                            break;
-                        }
-                    }
-                    if (identityId) break;
-                }
+               if (!identityId) {
+                   console.log("No se encontró una identidad que coincida con el autor del mensaje original.");
+                   continue;
+               }
 
-                if (!identityId) {
-                    console.log("No se encontró una identidad que coincida con el autor del mensaje original.");
-                    continue;
-                }
-
-                // Configurar los detalles del nuevo correo
-                let composeDetails = {
-                    to: [destino],
-                    subject: "Reenvío de PDF",
-                    body: "Adjunto el PDF solicitado.",
-                    attachments: [{
-                        file: file,
-                        name: pdfAttachment.name,
-                        contentType: pdfAttachment.contentType
-                    }],
-                    identityId: identityId
-                };
+               // Configurar los detalles del nuevo correo
+               let composeDetails = {
+                   to: [originalMessage.recipients[0]], // Enviar al destinatario original
+                   subject: "Reenvío de factura",
+                   body: "Estimado cliente,\n\nAdjunto nuevamente la factura solicitada.\n\nSaludos cordiales.",
+                   attachments: [{
+                       file: file,
+                       name: pdfAttachment.name,
+                       contentType: pdfAttachment.contentType
+                   }],
+                   identityId: identityId
+               };
 
                 // Crear y enviar el correo
                 let composeTab = await browser.compose.beginNew(composeDetails);
