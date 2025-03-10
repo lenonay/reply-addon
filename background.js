@@ -20,6 +20,8 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
             // Obtener el mensaje completo y su contenido
             let fullMessage = await browser.messages.getFull(message.id);
 
+            console.log(fullMessage);
+
             // Recuperamos el contenido del cuerpo del email
             let replyBody = fullMessage.parts[0].parts[0].body;
 
