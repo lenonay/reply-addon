@@ -29,7 +29,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 
                 console.log("Pre recuperar el mensaje completo");
                 // Obtener el mensaje completo (necesario para headers)
-                let fullMessage = await browser.messages.get(message.id);
+                let fullMessage = await browser.messages.getFull(message.id);
 
                 console.log("Mensaje completo", fullMessage);
 
