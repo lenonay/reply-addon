@@ -23,7 +23,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
             console.log(fullMessage);
 
             // Recuperamos el contenido del cuerpo del email
-            let replyBody = fullMessage.parts[0].parts[0].body;
+            let replyBody = fullMessage.parts[0].parts[0].parts[0].body;
 
             // Filtramos por el mensaje de error de caracteres inválidos
             if (!replyBody.includes(bodyFilter)) {
