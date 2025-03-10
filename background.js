@@ -81,7 +81,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                     subject: "Reenvío de PDF",
                     body: "Adjunto el PDF solicitado.",
                     attachments: [{
-                        file: file,
+                        file: pdfFile,
                         name: pdfAttachment.name,
                         contentType: pdfAttachment.contentType
                     }]
