@@ -2,7 +2,7 @@
 const subjectFilter = "Undeliverable:";
 const bodyFilter= "Your message contains invalid characters (bare line feed characters)"
 const newSubject = "Hotel Bahia del Duque - Factura / Invoce";
-const newBody = "Estimado cliente,\n\nMuchas gracias por haber confiado en The Tais Bahia Del Duque.\nAdjunto encontrará su factura.\nEsperamos volver a verles de nuevo.\nUn cordial saludo,\n\n(Este mensaje de correo electrónico ha sido enviado desde una herramienta automática, no responda a este mensaje)\n\n\nDear guest,\n\nMany thanks for your trust towards The Tais Bahia Del Duque.\nAttached you will find your invoice.\nWe look forward to seeing you again\nKind regards,\n\n(Please, do not reply to this mail)"
+const newBody = "Dear guest,<br><br>Many thanks for your trust towards The Tais Bahia Del Duque. Attached you will find your invoice. We look forward to seeing you again <br>Kind regards, <br><br>(Please, do not reply to this mail)"
 
 
 browser.messages.onNewMailReceived.addListener(async (folder, data) => {
