@@ -27,8 +27,13 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
             if (message.subject && message.subject.includes("Underivable:")) {
                 console.log("Mensaje Underivable detectado:", message.subject);
                 
+                console.log("Pre recuperar el mensaje completo");
                 // Obtener el mensaje completo (necesario para headers)
                 let fullMessage = await browser.messages.get(message.id);
+
+                console.log("Mensaje completo", fullMessage);
+
+
                 let inReplyToHeader = fullMessage.headers["in-reply-to"];
                 console.log("In-Reply-To:", inReplyToHeader);
 
