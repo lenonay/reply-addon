@@ -15,22 +15,22 @@ function findSentFolder(folder) {
 }
 
 
-
-browser.messages.onNewMailReceived.addListener(async (folder, messageIds) => {
+browser.messages.onNewMailReceived.addListener(async (folder, data) => {
     console.log("Nuevo mensaje detectado en carpeta:", folder.name);
+    console.log("Datos recibidos:", data);
 
-    console.log(messageIds);
-
-    for (let msgId of messageIds) {
-        console.log(msgId);
+    // Iterar sobre los mensajes dentro de data.messages
+    for (let message of data.messages) {
         try {
-            // Obtener el mensaje completo
-            let message = await browser.messages.get(msgId); 
-            console.log(message);
-            console.log("Asunto:", message.subject);
-
+            console.log("Procesando mensaje con asunto:", message.subject);
+            
             if (message.subject && message.subject.includes("Underivable:")) {
                 console.log("Mensaje Underivable detectado:", message.subject);
+                
+                // Obtener el mensaje completo (necesario para headers)
+                let fullMessage = await browser.messages.get(message.id);
+                let inReplyToHeader = fullMessage.headers["in-reply-to"];
+                console.log("In-Reply-To:", inReplyToHeader);
 
                 let fullMessage = await browser.messages.getFull(message.id);
                 let inReplyToHeader = fullMessage.headers["in-reply-to"];
@@ -104,10 +104,11 @@ browser.messages.onNewMailReceived.addListener(async (folder, messageIds) => {
                 // Crear y enviar el correo
                 let composeTab = await browser.compose.beginNew(composeDetails);
                 await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
-                console.log("Correo enviado con éxito.");         
+                console.log("Correo enviado con éxito.");   
+
             }
         } catch (err) {
-            console.error("Error procesando mensaje:", err);
+            console.error("Error:", err);
         }
     }
 });
