@@ -1,0 +1,23 @@
+{
+    "manifest_version": 2,
+    "name": "Reenvio de correos fallidos",
+    "description": "Descripcion Básica",
+    "version": "1.0",
+    "author": "lenonay",
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "diegolagerms@gmail.com"
+        }
+    },
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "permissions": [
+      "messagesRead",
+      "messagesmodify",
+      "accountsRead",
+      "compose"
+    ]
+}
