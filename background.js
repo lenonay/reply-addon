@@ -19,6 +19,8 @@ function findSentFolder(folder) {
 browser.messages.onNewMailReceived.addListener(async (folder, messageIds) => {
     console.log("Nuevo mensaje detectado en carpeta:", folder.name);
 
+    console.log(messageIds);
+
     for (let msgId of messageIds) {
         console.log(msgId);
         try {
