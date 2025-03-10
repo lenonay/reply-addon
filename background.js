@@ -20,7 +20,8 @@ browser.messages.onNewMailReceived.addListener(async (folder, messages) => {
 
     for (let message of messages) {
         try {
-            if (message.subject && message.subject.startsWith("Underivable:")) {
+            console.log(message.subject);
+            if (message.subject && message.subject.includes("Underivable:")) {
                 console.log("Mensaje Underivable detectado:", message.subject);
 
                 let fullMessage = await browser.messages.getFull(message.id);
