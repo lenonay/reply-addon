@@ -78,10 +78,13 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
                 }
 
                 let originalMsg = result.messages[0];
-                console.log("Mensaje original encontrado:", originalMsg.id);
+                console.log("Mensaje original encontrado con id:", originalMsg.id);
 
                 // Obtener adjuntos del original
                 let fullOriginal = await browser.messages.getFull(originalMsg.id);
+
+                console.log("Contenido del mensaje original: ", fullOriginal);
+
                 let attachments = fullOriginal.attachments.filter(att => 
                     att.contentType.toLowerCase() === "application/pdf"
                 );
