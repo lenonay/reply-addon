@@ -104,7 +104,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
 
                 // Configurar los detalles del nuevo correo
                 let composeDetails = {
-                    to: [fullOriginal.to[0]], // Enviar al destinatario original
+                    to: [fullOriginal.headers.to[0]], // Enviar al destinatario original
                     subject: "Reenvío de factura",
                     body: "Estimado cliente,\n\nAdjunto nuevamente la factura solicitada.\n\nSaludos cordiales.",
                     attachments: [{
