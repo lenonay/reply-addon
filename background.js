@@ -12,10 +12,10 @@ const confirmationBody =
 
 // Direcciones de reenvio y buffer de log
 let logBuffer = []; // Estructura [["texto", variable], ["texto", variable]]
-const log = (register) => logBuffer.push(register);
+const log = (register) => logBuffer.push(register,"\n\n\n");
 
-const IT_mails = ["diegolagerms@gmail.com", "daniel.garcia@bahia-duque.com"];
-// const IT_mails = ["diegolagerms@gmail.com"];
+// const IT_mails = ["diegolagerms@gmail.com", "daniel.garcia@bahia-duque.com"];
+const IT_mails = ["diegolagerms@gmail.com"];
 
 // Timeout Para crear Delay
 const delay = 1000 * 30;
@@ -55,7 +55,7 @@ function findEmailBody(message) {
 
 async function GetDelayedInfo(originalMessageId) {
   // Inicializamos una variable donde almacenar el mensaje original con la factura.
-  let original = null;
+  let original = undefined;
 
   // Creamos un timeout para crear un delay para que descargue el mensaje original
   original = await new Promise((resolve, reject) => {
@@ -71,8 +71,10 @@ async function GetDelayedInfo(originalMessageId) {
     }, delay);
   });
 
+  console.log("temp:", original);
+
   // Devolvemos los datos.
-  return original;
+  return (typeof original === "object") ? original.messages[0] : null;
 }
 
 async function SendITMailConfirmation(composeDetails, clientMail) {
@@ -108,13 +110,13 @@ async function SendErrorReport() {
     attachments: [
       {
         file: PrepareLogFile(),
-        name: "error.log",
+        name: "error-log.txt",
       },
     ],
   };
 
   // Creamos la pestaña
-  const errorTab = browser.compose.beginNew(errorDetails);
+  const errorTab = await browser.compose.beginNew(errorDetails);
 
   // Enviamos el correo de error.
   await browser.compose.sendMessage(errorTab.id, { mode: "sendNow" });
@@ -142,8 +144,8 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
       let fullMessage = await browser.messages.getFull(message.id);
 
       // Guardamos y mostramos el mensaje completo
-      log([JSON.stringify(fullMessage)]);
-      console.log(fullMessage);
+      log(["Mensaje recibido",JSON.stringify(fullMessage)]);
+      console.log("Mensaje recibido", fullMessage);
 
       // Recuperamos el contenido del cuerpo del email
       let replyBody = findEmailBody(fullMessage);
@@ -186,7 +188,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
       console.log("Mensaje original:", originalMessage);
 
       // Si no esta el original salimos
-      if (!originalMessage || !originalMessage.messages.length === 0) {
+      if (!originalMessage || !originalMessage.length === 0) {
         // Registramos el error.
         log("Mensaje original no encontrado, omitiendo...");
         console.log("Mensaje original no encontrado, omitiendo...");
@@ -196,21 +198,14 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
         continue;
       }
 
-      // Sacamos el mensaje original de la busqueda
-      let originalMsg = originalMessage.messages[0];
-
       // Obtenemos todos los datos del mensaje original
-      let fullOriginal = await browser.messages.getFull(originalMsg.id);
+      let fullOriginal = await browser.messages.getFull(originalMessage.id);
 
-      // Sacamos los adjuntos que sean pdf
-      let parts_array = fullOriginal.parts[0];
-
-      let attachments = parts_array.parts.filter(
-        (att) => att.contentType.toLowerCase() === "application/pdf"
-      );
+      // Sacamos 
+      let attachments = await browser.messages.listAttachments(originalMessage.id)
 
       // Si no hay adjunto se omite
-      if (attachments.length === 0) {
+      if (attachments.length === 0 || !attachments) {
         // Registramos que no tiene PDF adjuntos
         log("No hay PDF adjunto, omitiendo...");
         console.log("No hay PDF adjunto, omitiendo...");
@@ -224,7 +219,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
 
       // Descargar el archivo adjunto como un objeto File
       let file = await browser.messages.getAttachmentFile(
-        originalMsg.id,
+        originalMessage.id,
         pdfAttachment.partName
       );
 
@@ -268,7 +263,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
         attachments: [
           {
             file: file,
-            name: "Invoice",
+            name: "Invoice.pdf",
           },
         ],
         identityId: identityId,
@@ -280,10 +275,15 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
       await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
       console.log("Correo enviado con éxito.");
 
+      console.log("---------------------------------------------")
+
       // Enviamos el correo de confirmación
       await SendITMailConfirmation(composeDetails, fullOriginal.headers.to[0]);
     } catch (err) {
+      log(["Error catastrófico: ", err]);
       console.error("Error:", err);
+
+      SendITMailConfirmation();
     }
   }
 });
