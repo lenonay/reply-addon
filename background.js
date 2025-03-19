@@ -9,19 +9,19 @@ const newBody =
 
 const confirmationBody =
   "Se ha enviado correctamente el email fallido junto a su factura correspondiente.<br><br>Atentamente Departamento de IT Bahia del Duque";
-
+const sourceMail = "noreply@grupocio.onmicrosoft.com";
 // Direcciones de reenvio y buffer de log
 let logBuffer = []; // Estructura [["texto", variable], ["texto", variable]]
-const log = (register) => logBuffer.push(register,"\n\n\n");
+const log = (register) => logBuffer.push(register, "\n\n\n");
 
 // const IT_mails = ["diegolagerms@gmail.com", "daniel.garcia@bahia-duque.com"];
 const IT_mails = ["diegolagerms@gmail.com"];
 
 // Timeout Para crear Delay
-const delay = 1000 * 30;
+const delay = 1000 * 3;
 
 //////////// FUNCIONES
-function SearchForBody(object, key, wanted_value) {
+function SearchForPart(object, key, wanted_value) {
   let value;
 
   // Sacamos todas las claves y las iteramos
@@ -36,7 +36,7 @@ function SearchForBody(object, key, wanted_value) {
     // Si no coincide usando recursividad seguimos buscando.
     // Solo buscamos si existe la propiedad y es un objeto
     if (object[k] && typeof object[k] === "object") {
-      value = SearchForBody(object[k], key, wanted_value);
+      value = SearchForPart(object[k], key, wanted_value);
       // Devolvemos el valor si no es undefined
       return value !== undefined;
     }
@@ -47,10 +47,16 @@ function SearchForBody(object, key, wanted_value) {
 }
 
 function findEmailBody(message) {
-  const mailBody = SearchForBody(message, "contentType", "text/plain");
+  const mailBody = SearchForPart(message, "contentType", "text/plain");
 
   // Si conseguimos encontrar el texto plano devolvemos el cuerpo sino, devolvemos null
   return mailBody ? mailBody.body : null;
+}
+
+function findAttachment(message) {
+  const attachments = SearchForPart(message, "contentType", "application/pdf");
+
+  return attachments;
 }
 
 async function GetDelayedInfo(originalMessageId) {
@@ -71,10 +77,11 @@ async function GetDelayedInfo(originalMessageId) {
     }, delay);
   });
 
+  log(`temp: ${original}`);
   console.log("temp:", original);
 
   // Devolvemos los datos.
-  return (typeof original === "object") ? original.messages[0] : null;
+  return typeof original === "object" ? original.messages[0] : null;
 }
 
 async function SendITMailConfirmation(composeDetails, clientMail) {
@@ -144,7 +151,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
       let fullMessage = await browser.messages.getFull(message.id);
 
       // Guardamos y mostramos el mensaje completo
-      log(["Mensaje recibido",JSON.stringify(fullMessage)]);
+      log(["Mensaje recibido", JSON.stringify(fullMessage)]);
       console.log("Mensaje recibido", fullMessage);
 
       // Recuperamos el contenido del cuerpo del email
@@ -201,8 +208,17 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
       // Obtenemos todos los datos del mensaje original
       let fullOriginal = await browser.messages.getFull(originalMessage.id);
 
-      // Sacamos 
-      let attachments = await browser.messages.listAttachments(originalMessage.id)
+      log(["Mensaje original completo:", fullOriginal]);
+      console.log("Mensaje original completo: ", fullOriginal);
+
+      // // Sacamos
+      // let attachments = await browser.messages.listAttachments(
+      //   originalMessage.id
+      // );
+
+      let attachments = findAttachment(fullOriginal);
+
+      console.log("Adjuntos: ", attachments);
 
       // Si no hay adjunto se omite
       if (attachments.length === 0 || !attachments) {
@@ -215,7 +231,7 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
         continue;
       }
 
-      let pdfAttachment = attachments[0];
+      let pdfAttachment = attachments;
 
       // Descargar el archivo adjunto como un objeto File
       let file = await browser.messages.getAttachmentFile(
@@ -275,10 +291,10 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
       await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
       console.log("Correo enviado con éxito.");
 
-      console.log("---------------------------------------------")
-
       // Enviamos el correo de confirmación
       await SendITMailConfirmation(composeDetails, fullOriginal.headers.to[0]);
+
+      console.log("---------------------------------------------");
     } catch (err) {
       log(["Error catastrófico: ", err]);
       console.error("Error:", err);

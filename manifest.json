@@ -18,6 +18,7 @@
       "messagesRead",
       "messagesModify",
       "accountsRead",
+      "accountsFolders",
       "compose",
       "compose.send"
     ]
