@@ -1,8 +1,8 @@
 {
     "manifest_version": 2,
     "name": "Reenvio de correos fallidos",
-    "description": "Descripcion Básica",
-    "version": "1.0",
+    "description": "Analiza correos entrantes, en búsqueda de errores de DNS, BDAT y SPF.",
+    "version": "2.0",
     "author": "lenonay",
     "browser_specific_settings": {
         "gecko": {

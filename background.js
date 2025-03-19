@@ -1,21 +1,34 @@
 // Variables globales de configuración
+const mails = {
+  // IT_mails: ["diegolagerms@gmail.com", "daniel.garcia@bahia-duque.com"],
+  IT_mails: ["diegolagerms@gmail.com"],
+  sourceMail: "noreply@grupocio.onmicrosoft.com",
+};
+
 const subjectFilter = "Undeliverable:";
-const bodyFilterDev = "cola";
-const bodyFilter =
-  "Your message contains invalid characters (bare line feed characters)";
+
 const newSubject = "Hotel Bahia del Duque - Factura / Invoce";
+
+const bodyFilters = {
+  BDAT: "Your message contains invalid characters (bare line feed characters)",
+  BDAT_dev: "cola_BDAT",
+  DNS: "wasn't found at",
+  DNS_var:
+    "The Domain Name System (DNS) reported that the recipient's domain does not exist.",
+  DNS_dev: "cola_DNS",
+  SPF: "Security or policy settings at",
+  SPF_dev: "cola_SPF",
+};
+
 const newBody =
   "Dear guest,<br><br>Many thanks for your trust towards The Tais Bahia Del Duque. Attached you will find your invoice. We look forward to seeing you again <br>Kind regards, <br><br>(Please, do not reply to this mail)";
 
 const confirmationBody =
   "Se ha enviado correctamente el email fallido junto a su factura correspondiente.<br><br>Atentamente Departamento de IT Bahia del Duque";
-const sourceMail = "noreply@grupocio.onmicrosoft.com";
+
 // Direcciones de reenvio y buffer de log
 let logBuffer = []; // Estructura [["texto", variable], ["texto", variable]]
 const log = (register) => logBuffer.push(register, "\n\n\n");
-
-// const IT_mails = ["diegolagerms@gmail.com", "daniel.garcia@bahia-duque.com"];
-const IT_mails = ["diegolagerms@gmail.com"];
 
 // Timeout Para crear Delay
 const delay = 1000 * 3;
@@ -84,15 +97,19 @@ async function GetDelayedInfo(originalMessageId) {
   return typeof original === "object" ? original.messages[0] : null;
 }
 
-async function SendITMailConfirmation(composeDetails, clientMail) {
-  // Cambiamos el la dirección de destino
-  composeDetails.to = IT_mails;
+async function SendITMailConfirmation(composeDetails) {
+  // Cambiamos el subject
+  composeDetails.subject =
+    "Confirmación reenvio - Factura " + composeDetails.to;
 
   // Creamos un nuevo cuerpo
   composeDetails.body = confirmationBody;
 
-  // Cambiamos el subject
-  composeDetails.subject = "Confirmación reenvio - Factura " + clientMail;
+  // Cambiamos el la dirección de destino
+  composeDetails.to = mails.IT_mails;
+
+  // Borramos la factura adjunta
+  delete composeDetails.attachments
 
   // Creamos el correo
   let composeTab = await browser.compose.beginNew(composeDetails);
@@ -101,7 +118,7 @@ async function SendITMailConfirmation(composeDetails, clientMail) {
   await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
 
   // Creamos el console log
-  console.log("Correo de confirmación enviado a", IT_mails);
+  console.log("Correo de confirmación enviado a", mails.IT_mails);
 }
 
 function PrepareLogFile() {
@@ -111,7 +128,7 @@ function PrepareLogFile() {
 async function SendErrorReport() {
   // Creamos el correo electrónico con el log.
   const errorDetails = {
-    to: IT_mails,
+    to: mails.IT_mails,
     subject: "Error - Sistema automático de Reenvíos de Opera",
     body: "Se detectado un error al momento de reenviar un correo fallido de Opera. <br> En el fichero adjunto se puede consultar el registro generado.",
     attachments: [
@@ -127,6 +144,168 @@ async function SendErrorReport() {
 
   // Enviamos el correo de error.
   await browser.compose.sendMessage(errorTab.id, { mode: "sendNow" });
+}
+
+function GetInReplyToID(message) {
+  // Si no hay encabezado de respuesta salimos
+  let inReplyToHeader = message.headers["in-reply-to"];
+
+  if (!inReplyToHeader) {
+    // Si se esta respondiendo a un correo anterior, salimos sin informar.
+    log(["Falta encabezado 'In-Reply-To'."]);
+    console.log("Falta encabezado 'In-Reply-To'.");
+  }
+
+  // Extraer y limpiar el Message-ID desde la cabecera In-reply-To
+  let originalMessageId = Array.isArray(inReplyToHeader)
+    ? inReplyToHeader[0]
+    : inReplyToHeader;
+
+  // Devolvemos el ID del mensaje
+  return originalMessageId.replace(/^<|>$/g, "");
+}
+
+async function ExtractPDF(originalMessage, originalMessageID) {
+  // Sacamos los elementos adjuntos
+  const attachments = findAttachment(originalMessage);
+
+  // Registramos en el buffer los archivos adjuntos
+  log(["Adjuntos", attachments]);
+  console.log("Adjuntos: ", attachments);
+
+  // Si no hay adjunto se omite
+  if (attachments.length === 0 || !attachments) {
+    // Registramos que no tiene PDF adjuntos
+    log(["No hay PDF adjunto, omitiendo..."]);
+    console.log("No hay PDF adjunto, omitiendo...");
+
+    // Enviamos un reporte a IT
+    SendErrorReport();
+    return;
+  }
+
+  // Descargar el archivo adjunto como un objeto File y lo devolvemos
+  return (file = await browser.messages.getAttachmentFile(
+    originalMessageID,
+    attachments.partName
+  ));
+}
+
+async function GetAccountIdentity(fromHeader) {
+  // Obtener la identidad (cuenta) desde la cual se enviará el correo.
+  let accounts = await browser.accounts.list();
+  let identityId;
+
+  // Sacamos el correo origen del correo inicial.
+  let rawOriginalMail = fromHeader[0].split(" ").pop();
+
+  let originalMail = rawOriginalMail.replace(/^<|>$/g, "");
+
+  for (let account of accounts) {
+    for (let identity of account.identities) {
+      if (identity.email.toLowerCase() === originalMail) {
+        identityId = identity.id;
+        break;
+      }
+    }
+    if (identityId) break;
+  }
+
+  if (!identityId) {
+    log([
+      "No se encontró la cuenta correcta para enviar el email, omitiendo...",
+    ]);
+    console.log(
+      "No se encontró la cuenta correcta para enviar el email, omitiendo..."
+    );
+
+    // Enviamos el reporte a IT.
+    SendErrorReport();
+    return;
+  }
+
+  // Devolvemos la identidad de la cuenta.
+  return identityId;
+}
+
+async function SendMessage(composeDetails) {
+  // Crear y enviar el correo
+  const composeTab = await browser.compose.beginNew(composeDetails);
+
+  await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
+  console.log("Correo enviado con éxito.");
+}
+
+async function CreateMessage(messageFull) {
+  const originalMessageID = GetInReplyToID(messageFull);
+
+  const originalMessage = await GetDelayedInfo(originalMessageID);
+
+  // Registramos el correo original
+  log(["Mensaje original: ", JSON.stringify(originalMessage)]);
+  console.log("Mensaje original:", originalMessage);
+
+  // Si no esta el original salimos
+  if (!originalMessage || !originalMessage.length === 0) {
+    // Registramos el error.
+    log("Mensaje original no encontrado, omitiendo...");
+    console.log("Mensaje original no encontrado, omitiendo...");
+
+    // Antes de salir del bucle, mandamos un informe de error.
+    SendErrorReport();
+    return;
+  }
+
+  // Obtenemos todos los datos del mensaje original
+  const fullOriginal = await browser.messages.getFull(originalMessage.id);
+
+  log(["Mensaje original completo:", fullOriginal]);
+  console.log("Mensaje original completo: ", fullOriginal);
+
+  // Buscamos y extramos los archivos pdf adjuntos
+  const pdfFile = await ExtractPDF(fullOriginal, originalMessage.id);
+
+  // Si no se encontró el pdf, salimos porque ya se mostro el error previamente.
+  if (!pdfFile) return;
+
+  // Buscamos el correo original desde donde se envío, es decir nuestra cuenta.
+  const identityId = await GetAccountIdentity(fullOriginal.headers.from);
+
+  // Configurar los detalles del nuevo correo y lo devolvemos.
+  return {
+    to: [fullOriginal.headers.to[0]], // Enviar al destinatario original
+    subject: newSubject,
+    body: newBody,
+    attachments: [
+      {
+        file: pdfFile,
+        name: "Invoice.pdf",
+      },
+    ],
+    identityId: identityId,
+  };
+}
+
+async function ProcessBDAT(message) {
+  // Recuperamos el ID del mensaje original
+  const composeDetails = await CreateMessage(message);
+
+  // Si no hay detalles de envio salimos porque entonces falló el proceso en algún punto
+  if (!composeDetails) return;
+
+  // Enviamos el mensaje al cliente
+  await SendMessage(composeDetails);
+
+  // Enviamos la confirmación de envio
+  await SendITMailConfirmation(composeDetails);
+}
+
+function ProcessDNS(message) {
+  console.log("Mensaje de DNS de prueba");
+}
+
+function ProcessSPF(message) {
+  console.log("Mensaje de SPF de prueba");
 }
 
 browser.messages.onNewMailReceived.addListener(async (folder, data) => {
@@ -157,149 +336,40 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
       // Recuperamos el contenido del cuerpo del email
       let replyBody = findEmailBody(fullMessage);
 
-      // Filtramos por el mensaje de error de caracteres inválidos
-      if (
-        !replyBody.includes(bodyFilter) &&
-        !replyBody.includes(bodyFilterDev)
-      ) {
-        // No vamos a informar porque no se considera error.
-        log(["No incluye el codigo de error, omitiendo mensaje..."]);
-        console.log("No incluye el codigo de error, omitiendo mensaje...");
-        continue;
-      }
-
-      // Si no hay encabezado de respuesta salimos
-      let inReplyToHeader = fullMessage.headers["in-reply-to"];
-
-      if (!inReplyToHeader) {
-        // Si se esta respondiendo a un correo anterior, salimos sin informar.
-        log(["Falta encabezado 'In-Reply-To'."]);
-        console.log("Falta encabezado 'In-Reply-To'.");
-        continue;
-      }
-
-      // Extraer y limpiar el Message-ID desde la cabecera In-reply-To
-      let originalMessageId = Array.isArray(inReplyToHeader)
-        ? inReplyToHeader[0]
-        : inReplyToHeader;
-      originalMessageId = originalMessageId.replace(/^<|>$/g, "");
-
-      // Comenzar el timeout para buscar el mensaje original.
+      // Comenzar el timeout para generar tiempo antes de buscar el email original
       log([`Empezando timeout de ${delay / 1000} segundos`]);
       console.log("Empezando timeout de", delay / 1000, "segundos");
 
-      let originalMessage = await GetDelayedInfo(originalMessageId);
-
-      // Registramos el correo original
-      log(["Mensaje original: ", JSON.stringify(originalMessage)]);
-      console.log("Mensaje original:", originalMessage);
-
-      // Si no esta el original salimos
-      if (!originalMessage || !originalMessage.length === 0) {
-        // Registramos el error.
-        log("Mensaje original no encontrado, omitiendo...");
-        console.log("Mensaje original no encontrado, omitiendo...");
-
-        // Antes de salir del bucle, mandamos un informe de error.
-        SendErrorReport();
-        continue;
+      switch (true) {
+        // Fallos de BDAT (caracteres insuales no soportados)
+        case replyBody.includes(bodyFilters.BDAT) ||
+          replyBody.includes(bodyFilters.BDAT_dev):
+          await ProcessBDAT(fullMessage);
+          break;
+        // Email no encontrado o inexistente
+        case replyBody.includes(bodyFilters.DNS) ||
+          replyBody.includes(bodyFilters.DNS_var) ||
+          replyBody.includes(bodyFilters.DNS_dev):
+          await ProcessDNS(fullMessage);
+          break;
+        // Fallos en la política de seguridad
+        case replyBody.includes(bodyFilters.SPF) ||
+          replyBody.includes(bodyFilters.SPF_dev):
+          await ProcessSPF(fullMessage);
+          break;
+        default:
+          // No vamos a informar porque no se considera error.
+          log(["No incluye el codigo de error, omitiendo mensaje..."]);
+          console.log("No incluye el codigo de error, omitiendo mensaje...");
+          break;
       }
-
-      // Obtenemos todos los datos del mensaje original
-      let fullOriginal = await browser.messages.getFull(originalMessage.id);
-
-      log(["Mensaje original completo:", fullOriginal]);
-      console.log("Mensaje original completo: ", fullOriginal);
-
-      // // Sacamos
-      // let attachments = await browser.messages.listAttachments(
-      //   originalMessage.id
-      // );
-
-      let attachments = findAttachment(fullOriginal);
-
-      console.log("Adjuntos: ", attachments);
-
-      // Si no hay adjunto se omite
-      if (attachments.length === 0 || !attachments) {
-        // Registramos que no tiene PDF adjuntos
-        log("No hay PDF adjunto, omitiendo...");
-        console.log("No hay PDF adjunto, omitiendo...");
-
-        // Enviamos un reporte a IT
-        SendErrorReport();
-        continue;
-      }
-
-      let pdfAttachment = attachments;
-
-      // Descargar el archivo adjunto como un objeto File
-      let file = await browser.messages.getAttachmentFile(
-        originalMessage.id,
-        pdfAttachment.partName
-      );
-
-      // Obtener la identidad (cuenta) desde la cual se enviará el correo
-      let accounts = await browser.accounts.list();
-      let identityId;
-
-      // Sacamos el correo origen del correo inicial
-      let rawOriginalMail = fullOriginal.headers.from[0].split(" ").pop();
-
-      let originalMail = rawOriginalMail.replace(/^<|>$/g, "");
-
-      for (let account of accounts) {
-        for (let identity of account.identities) {
-          if (identity.email.toLowerCase() === originalMail) {
-            identityId = identity.id;
-            break;
-          }
-        }
-        if (identityId) break;
-      }
-
-      if (!identityId) {
-        log(
-          "No se encontró la cuenta correcta para enviar el email, omitiendo..."
-        );
-        console.log(
-          "No se encontró la cuenta correcta para enviar el email, omitiendo..."
-        );
-
-        // Enviamos el reporte a IT
-        SendErrorReport();
-        continue;
-      }
-
-      // Configurar los detalles del nuevo correo
-      let composeDetails = {
-        to: [fullOriginal.headers.to[0]], // Enviar al destinatario original
-        subject: newSubject,
-        body: newBody,
-        attachments: [
-          {
-            file: file,
-            name: "Invoice.pdf",
-          },
-        ],
-        identityId: identityId,
-      };
-
-      // Crear y enviar el correo
-      let composeTab = await browser.compose.beginNew(composeDetails);
-
-      await browser.compose.sendMessage(composeTab.id, { mode: "sendNow" });
-      console.log("Correo enviado con éxito.");
-
-      // Enviamos el correo de confirmación
-      await SendITMailConfirmation(composeDetails, fullOriginal.headers.to[0]);
 
       console.log("---------------------------------------------");
     } catch (err) {
       log(["Error catastrófico: ", err]);
       console.error("Error:", err);
 
-      SendITMailConfirmation();
+      SendErrorReport();
     }
   }
 });
