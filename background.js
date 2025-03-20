@@ -3,6 +3,7 @@ const mails = {
   // IT_mails: ["diegolagerms@gmail.com", "daniel.garcia@bahia-duque.com"],
   IT_mails: ["diegolagerms@gmail.com"],
   sourceMail: "noreply@grupocio.onmicrosoft.com",
+  reception: [],
 };
 
 const subjectFilter = "Undeliverable:";
@@ -20,18 +21,40 @@ const bodyFilters = {
   SPF_dev: "cola_SPF",
 };
 
-const newBody =
-  "Dear guest,<br><br>Many thanks for your trust towards The Tais Bahia Del Duque. Attached you will find your invoice. We look forward to seeing you again <br>Kind regards, <br><br>(Please, do not reply to this mail)";
+const subjectTemplates = {
+  BDAT: "Hotel Bahia del Duque - Factura / Invoce",
+  DNS: "Error DNS - Sistema automático de Reenvíos de Opera",
+  SPF: "Error SPF - Sistema automático de Reenvíos de Opera",
+  report: "Error - Sistema automático de Reenvíos de Opera",
+  confirmation: "Confirmación reenvio - Factura ",
+};
 
-const confirmationBody =
-  "Se ha enviado correctamente el email fallido junto a su factura correspondiente.<br><br>Atentamente Departamento de IT Bahia del Duque";
+const bodyTemplates = {
+  BDAT: "Dear guest,<br><br>Many thanks for your trust towards The Tais Bahia Del Duque. Attached you will find your invoice. We look forward to seeing you again <br>Kind regards, <br><br>(Please, do not reply to this mail)",
+  DNS: (clientMail) => {
+    return `Ha fallado el envío de la factura al cliente:  
+    <b>${clientMail}</b>.<br>Por alguno de los siguientes motivos:
+    <br><ul><li>La dirección de correo electrónico está mal escrita o incompleta.</li><li>La dirección de correo no existe.</li></ul>
+    Revise la información proporcionada e intente reenviar el email con la factura,
+    <br>Atentamente el departamento de Informática.`;
+  },
+  SPF: (clientMail) => {
+    return `Ha fallado el envío de la factura al cliente: 
+    <b>${clientMail}</b>. Por el siguiente motivo:
+    <br><ul><li>Las configuración de las políticas de seguridad de la cuenta del cliente, impiden el envío a esa dirección.</li></ul>
+    No es posible entregar nigún email a esa dirección, lamentamos las molestias
+    <br>Atentamente el departamento de Informática`;
+  },
+  confirmation:
+    "Se ha enviado correctamente el email fallido junto a su factura correspondiente.<br><br>Atentamente Departamento de IT Bahia del Duque",
+};
 
-// Direcciones de reenvio y buffer de log
+// Buffer de logs
 let logBuffer = []; // Estructura [["texto", variable], ["texto", variable]]
 const log = (register) => logBuffer.push(register, "\n\n\n");
 
 // Timeout Para crear Delay
-const delay = 1000 * 3;
+const delay = 1000 * 10;
 
 //////////// FUNCIONES
 function SearchForPart(object, key, wanted_value) {
@@ -90,7 +113,7 @@ async function GetDelayedInfo(originalMessageId) {
     }, delay);
   });
 
-  log(`temp: ${original}`);
+  log(`temp: ${JSON.stringify(original)}`);
   console.log("temp:", original);
 
   // Devolvemos los datos.
@@ -99,17 +122,16 @@ async function GetDelayedInfo(originalMessageId) {
 
 async function SendITMailConfirmation(composeDetails) {
   // Cambiamos el subject
-  composeDetails.subject =
-    "Confirmación reenvio - Factura " + composeDetails.to;
+  composeDetails.subject = subjectTemplates.confirmation + composeDetails.to;
 
   // Creamos un nuevo cuerpo
-  composeDetails.body = confirmationBody;
+  composeDetails.body = bodyTemplates.confirmation;
 
   // Cambiamos el la dirección de destino
   composeDetails.to = mails.IT_mails;
 
   // Borramos la factura adjunta
-  delete composeDetails.attachments
+  delete composeDetails.attachments;
 
   // Creamos el correo
   let composeTab = await browser.compose.beginNew(composeDetails);
@@ -129,7 +151,7 @@ async function SendErrorReport() {
   // Creamos el correo electrónico con el log.
   const errorDetails = {
     to: mails.IT_mails,
-    subject: "Error - Sistema automático de Reenvíos de Opera",
+    subject: subjectTemplates.report,
     body: "Se detectado un error al momento de reenviar un correo fallido de Opera. <br> En el fichero adjunto se puede consultar el registro generado.",
     attachments: [
       {
@@ -174,7 +196,7 @@ async function ExtractPDF(originalMessage, originalMessageID) {
   console.log("Adjuntos: ", attachments);
 
   // Si no hay adjunto se omite
-  if (attachments.length === 0 || !attachments) {
+  if (!attachments || attachments.length === 0) {
     // Registramos que no tiene PDF adjuntos
     log(["No hay PDF adjunto, omitiendo..."]);
     console.log("No hay PDF adjunto, omitiendo...");
@@ -228,6 +250,17 @@ async function GetAccountIdentity(fromHeader) {
   return identityId;
 }
 
+async function NotifyReception(composeDetails) {
+  // Borramos la factura adjunta
+  delete composeDetails.attachments;
+
+  // Cambiamos la direccion de envio uniendo las direcciones de correo de recepcion a las de IT
+  composeDetails.to = mails.IT_mails.concat(mails.reception);
+
+  // Enviamos el mensaje
+  await SendMessage(composeDetails);
+}
+
 async function SendMessage(composeDetails) {
   // Crear y enviar el correo
   const composeTab = await browser.compose.beginNew(composeDetails);
@@ -274,8 +307,8 @@ async function CreateMessage(messageFull) {
   // Configurar los detalles del nuevo correo y lo devolvemos.
   return {
     to: [fullOriginal.headers.to[0]], // Enviar al destinatario original
-    subject: newSubject,
-    body: newBody,
+    subject: subjectTemplates.BDAT,
+    body: bodyTemplates.BDAT,
     attachments: [
       {
         file: pdfFile,
@@ -300,20 +333,61 @@ async function ProcessBDAT(message) {
   await SendITMailConfirmation(composeDetails);
 }
 
-function ProcessDNS(message) {
-  console.log("Mensaje de DNS de prueba");
+async function ProcessDNS(message) {
+  // Creamos y cargamos el mail
+  const composeDetails = await CreateMessage(message);
+
+  // Verificamos que todo el proceso haya ido bien, sino reportamos a IT
+  if (!composeDetails) return;
+
+  // Recuperamos la dirección de correo del cliente para añadirla al cuerpo del email
+  const clientMail = composeDetails.to[0];
+
+  // Cambiamos el asunto al error de DNS
+  composeDetails.subject = subjectTemplates.DNS;
+
+  // Cambiamos el cuerpo incluyendo el mensaje
+  composeDetails.body = bodyTemplates.DNS(clientMail);
+
+  // Notificamos a recepción
+  await NotifyReception(composeDetails);
 }
 
-function ProcessSPF(message) {
-  console.log("Mensaje de SPF de prueba");
+async function ProcessSPF(message) {
+  // Creamos y generamos el mail de entrega
+  const composeDetails = await CreateMessage(message);
+
+  // Verificamos que se haya generado el correo de forma correcta.
+  if (!composeDetails) return;
+
+  // Recuperamos la dirección de correo del cliente
+  const clientMail = composeDetails.to[0];
+
+  // Cambiamos el asunto
+  composeDetails.subject = subjectTemplates.SPF;
+
+  // Cambiamos el cuerpo del mensaje incluyendo el email del cliente
+  composeDetails.body = bodyTemplates.SPF(clientMail);
+
+  // Notificamos a recepción
+  await NotifyReception(composeDetails);
 }
 
 browser.messages.onNewMailReceived.addListener(async (folder, data) => {
   // Iterar sobre los mensajes dentro de data.messages
   for (let message of data.messages) {
     try {
-      // Asignando el valor vacíamos el buffer anterior.
-      logBuffer = ["Procesando mensaje con asunto:", message.subject];
+      // Permite mayor legibilidad en la consola
+      console.log("-----------------------------");
+
+      const fecha = new Date();
+
+      // Asignando el valor vacíamos el buffer anterior. Y creamos un time stamp
+      logBuffer = ["Timestamp", fecha.toLocaleString()];
+      console.log("Timestamp", fecha.toLocaleString());
+
+      // Comenzamos procesando el asunto del mensaje
+      log(["Procesando mensaje con asunto:", message.subject]);
       console.log("Procesando mensaje con asunto:", message.subject);
 
       // Si no encuentra el asunto no pasa el filtro, salimos e ignoramos el correo
@@ -363,8 +437,6 @@ browser.messages.onNewMailReceived.addListener(async (folder, data) => {
           console.log("No incluye el codigo de error, omitiendo mensaje...");
           break;
       }
-
-      console.log("---------------------------------------------");
     } catch (err) {
       log(["Error catastrófico: ", err]);
       console.error("Error:", err);
