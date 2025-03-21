@@ -1,7 +1,7 @@
 // Variables globales de configuración
 const mails = {
   sourceMail: "noreply@grupocio.onmicrosoft.com",
-  IT_mails: ["diegolagerms@gmail.com"],
+  IT_mails: ["diegolagerms@gmail.com", "jcarlos.perez@bahia-duque.com", "daniel.garcia@bahia-duque.com"],
   reception: [],
 };
 
@@ -22,7 +22,7 @@ const subjectTemplates = {
   BDAT: "Hotel Bahia del Duque - Factura / Invoce",
   DNS: "Error DNS - Sistema automático de Reenvíos de Opera",
   SPF: "Error SPF - Sistema automático de Reenvíos de Opera",
-  report: "Error - Sistema automático de Reenvíos de Opera",
+  report: "Error Fatal - Sistema automático de Reenvíos de Opera",
   confirmation: "Confirmación reenvio - Factura ",
 };
 
