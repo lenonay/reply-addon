@@ -1,14 +1,11 @@
 // Variables globales de configuración
 const mails = {
-  // IT_mails: ["diegolagerms@gmail.com", "daniel.garcia@bahia-duque.com"],
-  IT_mails: ["diegolagerms@gmail.com"],
   sourceMail: "noreply@grupocio.onmicrosoft.com",
+  IT_mails: ["diegolagerms@gmail.com"],
   reception: [],
 };
 
 const subjectFilter = "Undeliverable:";
-
-const newSubject = "Hotel Bahia del Duque - Factura / Invoce";
 
 const bodyFilters = {
   BDAT: "Your message contains invalid characters (bare line feed characters)",
@@ -30,23 +27,36 @@ const subjectTemplates = {
 };
 
 const bodyTemplates = {
-  BDAT: "Dear guest,<br><br>Many thanks for your trust towards The Tais Bahia Del Duque. Attached you will find your invoice. We look forward to seeing you again <br>Kind regards, <br><br>(Please, do not reply to this mail)",
+  BDAT: `Muchas gracias por haber confiado en The Tais Bahia Del Duque.
+  <br>Adjunto encontrará su factura.
+  <br>Esperamos volver a verles de nuevo.
+  <br>Un cordial saludo,
+  <br><br>(Este mensaje de correo electrónico ha sido enviado desde una herramienta automática, no responda a este mensaje)
+  
+  <br><br><br>
+  Dear guest,
+  <br>Many thanks for your trust towards The Tais Bahia Del Duque.
+  <br>Attached you will find your invoice.
+  <br>We look forward to seeing you again
+  <br>Kind regards,
+  <br><br>(Please, do not reply to this mail)`,
+
   DNS: (clientMail) => {
     return `Ha fallado el envío de la factura al cliente:  
     <b>${clientMail}</b>.<br>Por alguno de los siguientes motivos:
     <br><ul><li>La dirección de correo electrónico está mal escrita o incompleta.</li><li>La dirección de correo no existe.</li></ul>
     Revise la información proporcionada e intente reenviar el email con la factura,
-    <br>Atentamente el departamento de Informática.`;
+    <br>Atentamente, el departamento de Informática.`;
   },
   SPF: (clientMail) => {
     return `Ha fallado el envío de la factura al cliente: 
     <b>${clientMail}</b>. Por el siguiente motivo:
     <br><ul><li>Las configuración de las políticas de seguridad de la cuenta del cliente, impiden el envío a esa dirección.</li></ul>
     No es posible entregar nigún email a esa dirección, lamentamos las molestias
-    <br>Atentamente el departamento de Informática`;
+    <br>Atentamente, el departamento de Informática`;
   },
   confirmation:
-    "Se ha enviado correctamente el email fallido junto a su factura correspondiente.<br><br>Atentamente Departamento de IT Bahia del Duque",
+    "Se ha enviado correctamente el email fallido junto a su factura correspondiente.<br><br>Atentamente, el departamento de Informática",
 };
 
 // Buffer de logs
