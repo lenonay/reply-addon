@@ -1,4 +1,4 @@
-// Variables globales de configuración
+﻿// Variables globales de configuración
 const mails = {
   sourceMail: "noreply@grupocio.onmicrosoft.com",
   IT_mails: ["diegolagerms@gmail.com", "jcarlos.perez@bahia-duque.com", "daniel.garcia@bahia-duque.com"],
@@ -27,7 +27,8 @@ const subjectTemplates = {
 };
 
 const bodyTemplates = {
-  BDAT: `Muchas gracias por haber confiado en The Tais Bahia Del Duque.
+  BDAT: `Estimado cliente,
+  <br>Muchas gracias por haber confiado en The Tais Bahia Del Duque.
   <br>Adjunto encontrará su factura.
   <br>Esperamos volver a verles de nuevo.
   <br>Un cordial saludo,
@@ -45,18 +46,18 @@ const bodyTemplates = {
     return `Ha fallado el envío de la factura al cliente:  
     <b>${clientMail}</b>.<br>Por alguno de los siguientes motivos:
     <br><ul><li>La dirección de correo electrónico está mal escrita o incompleta.</li><li>La dirección de correo no existe.</li></ul>
-    Revise la información proporcionada e intente reenviar el email con la factura,
+    Revise el email del cliente y reenvie la factura a traves del correo.
     <br>Atentamente, el departamento de Informática.`;
   },
   SPF: (clientMail) => {
     return `Ha fallado el envío de la factura al cliente: 
     <b>${clientMail}</b>. Por el siguiente motivo:
-    <br><ul><li>Las configuración de las políticas de seguridad de la cuenta del cliente, impiden el envío a esa dirección.</li></ul>
-    No es posible entregar nigún email a esa dirección, lamentamos las molestias
+    <br><ul><li>Las configuración de las políticas de seguridad de la cuenta del cliente impiden el envío a esa dirección desde Opera.</li></ul>
+    Debe reenviar la factura a través del correo.
     <br>Atentamente, el departamento de Informática`;
   },
   confirmation:
-    "Se ha enviado correctamente el email fallido junto a su factura correspondiente.<br><br>Atentamente, el departamento de Informática",
+    "Se ha detectado un error durante el envío. Se ha corregido y enviado la factura al cliente.<br><br>Atentamente, el departamento de Informática",
 };
 
 // Buffer de logs
@@ -64,7 +65,7 @@ let logBuffer = []; // Estructura [["texto", variable], ["texto", variable]]
 const log = (register) => logBuffer.push(register, "\n\n\n");
 
 // Timeout Para crear Delay
-const delay = 1000 * 10;
+const delay = 1000 * 140;
 
 //////////// FUNCIONES
 function SearchForPart(object, key, wanted_value) {
