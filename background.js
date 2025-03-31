@@ -1,7 +1,7 @@
 ﻿// Variables globales de configuración
 const mails = {
   sourceMail: "noreply@grupocio.onmicrosoft.com",
-  IT_mails: ["diegolagerms@gma0il.com", "jcarlos.perez@bahia-duque.com", "daniel.garcia@bahia-duque.com"],
+  IT_mails: ["diegolagerms@gmail.com", "jcarlos.perez@bahia-duque.com", "daniel.garcia@bahia-duque.com"],
   reception: [],
 };
 
@@ -21,7 +21,7 @@ const bodyFilters = {
 };
 
 const subjectTemplates = {
-  BDAT: "Hotel Bahia del Duque - Factura / Invoce",
+  BDAT: "Hotel Bahia del Duque - Factura / Invoice",
   DNS: "Error DNS - Sistema automático de Reenvíos de Opera",
   SPF: "Error SPF - Sistema automático de Reenvíos de Opera",
   NotFound: "Error de Envío - Sistema automático de Reenvíos de Opera",
@@ -49,7 +49,6 @@ const bodyTemplates = {
     return `Ha fallado el envío de la factura al cliente:  
     <b>${clientMail}</b>.<br>Por alguno de los siguientes motivos:
     <br><ul><li>La dirección de correo electrónico está mal escrita o incompleta.</li><li>La dirección de correo no existe.</li></ul>
-    Revise el email del cliente y reenvie la factura a traves del correo.
     Revise el email del cliente y reenvie la factura a traves del correo.
     <br>Atentamente, el departamento de Informática.`;
   },
@@ -236,10 +235,11 @@ async function ExtractPDF(originalMessage, originalMessageID) {
   }
 
   // Descargar el archivo adjunto como un objeto File y lo devolvemos
-  return (file = await browser.messages.getAttachmentFile(
+  return await browser.messages.getAttachmentFile(
     originalMessageID,
     attachments.partName
-  ));
+  );
+  
 }
 
 async function GetAccountIdentity(fromHeader) {
@@ -334,7 +334,7 @@ async function CreateMessage(messageFull) {
   console.log("Mensaje original:", originalMessage);
 
   // Si no esta el original salimos
-  if (!originalMessage || !originalMessage.length === 0) {
+  if (!originalMessage || originalMessage.length === 0) {
     // Registramos el error.
     log("Mensaje original no encontrado, procesando...");
     console.log("Mensaje original no encontrado, procesando...");
