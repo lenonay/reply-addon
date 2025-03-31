@@ -32,6 +32,8 @@ const subjectTemplates = {
 const bodyTemplates = {
   BDAT: `Estimado cliente,
   <br>Muchas gracias por haber confiado en The Tais Bahia Del Duque.
+  BDAT: `Estimado cliente,
+  <br>Muchas gracias por haber confiado en The Tais Bahia Del Duque.
   <br>Adjunto encontrará su factura.
   <br>Esperamos volver a verles de nuevo.
   <br>Un cordial saludo,
@@ -50,6 +52,7 @@ const bodyTemplates = {
     <b>${clientMail}</b>.<br>Por alguno de los siguientes motivos:
     <br><ul><li>La dirección de correo electrónico está mal escrita o incompleta.</li><li>La dirección de correo no existe.</li></ul>
     Revise el email del cliente y reenvie la factura a traves del correo.
+    Revise el email del cliente y reenvie la factura a traves del correo.
     <br>Atentamente, el departamento de Informática.`;
   },
   SPF: (clientMail) => {
@@ -67,6 +70,7 @@ const bodyTemplates = {
   },
   confirmation:
     "Se ha detectado un error durante el envío. Se ha corregido y enviado la factura al cliente.<br><br>Atentamente, el departamento de Informática",
+    "Se ha detectado un error durante el envío. Se ha corregido y enviado la factura al cliente.<br><br>Atentamente, el departamento de Informática",
 };
 
 // Buffer de logs
@@ -74,6 +78,7 @@ let logBuffer = []; // Estructura [["texto", variable], ["texto", variable]]
 const log = (register) => logBuffer.push(register, "\n\n\n");
 
 // Timeout Para crear Delay
+const delay = 1000 * 140;
 const delay = 1000 * 140;
 
 //////////// FUNCIONES
