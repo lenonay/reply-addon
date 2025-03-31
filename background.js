@@ -32,8 +32,6 @@ const subjectTemplates = {
 const bodyTemplates = {
   BDAT: `Estimado cliente,
   <br>Muchas gracias por haber confiado en The Tais Bahia Del Duque.
-  BDAT: `Estimado cliente,
-  <br>Muchas gracias por haber confiado en The Tais Bahia Del Duque.
   <br>Adjunto encontrará su factura.
   <br>Esperamos volver a verles de nuevo.
   <br>Un cordial saludo,
@@ -70,7 +68,6 @@ const bodyTemplates = {
   },
   confirmation:
     "Se ha detectado un error durante el envío. Se ha corregido y enviado la factura al cliente.<br><br>Atentamente, el departamento de Informática",
-    "Se ha detectado un error durante el envío. Se ha corregido y enviado la factura al cliente.<br><br>Atentamente, el departamento de Informática",
 };
 
 // Buffer de logs
@@ -78,7 +75,6 @@ let logBuffer = []; // Estructura [["texto", variable], ["texto", variable]]
 const log = (register) => logBuffer.push(register, "\n\n\n");
 
 // Timeout Para crear Delay
-const delay = 1000 * 140;
 const delay = 1000 * 140;
 
 //////////// FUNCIONES
@@ -89,7 +85,7 @@ function SearchForPart(object, key, wanted_value) {
   Object.keys(object).some((k) => {
     // Si coincide con la que buscamos asignamos el valor y salimos.
     if (k === key && object[k] === wanted_value) {
-      // Devolvemos el objecto completo
+      // Devolvemos el objecto completo 
       value = object;
       return true;
     }
@@ -302,7 +298,7 @@ async function SendMessage(composeDetails) {
   console.log("Correo enviado con éxito.");
 }
 
-function OriginalNotFound(message){
+async function OriginalNotFound(message){
   // Recuperamos el cuerpo del correo
   const mailBody = findEmailBody(message);
 
@@ -315,7 +311,7 @@ function OriginalNotFound(message){
   }
 
   // Recuperamos la identidad de la cuenta de noreply
-  const accountIdentity = GetAccountIdentity(message.headers.to);
+  const accountIdentity = await GetAccountIdentity(message.headers.to);
 
   const composeDetails = {
     to: mails.IT_mails.concat(mails.reception), // Enviar al destinatario original
