@@ -1,9 +1,11 @@
-// Variables globales de configuración
+﻿// Variables globales de configuración
 const mails = {
   sourceMail: "noreply@grupocio.onmicrosoft.com",
-  IT_mails: ["diegolagerms@gmail.com", "jcarlos.perez@bahia-duque.com", "daniel.garcia@bahia-duque.com"],
+  IT_mails: ["diegolagerms@gma0il.com", "jcarlos.perez@bahia-duque.com", "daniel.garcia@bahia-duque.com"],
   reception: [],
 };
+
+const mailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/;
 
 const subjectFilter = "Undeliverable:";
 
@@ -22,12 +24,14 @@ const subjectTemplates = {
   BDAT: "Hotel Bahia del Duque - Factura / Invoce",
   DNS: "Error DNS - Sistema automático de Reenvíos de Opera",
   SPF: "Error SPF - Sistema automático de Reenvíos de Opera",
+  NotFound: "Error de Envío - Sistema automático de Reenvíos de Opera",
   report: "Error Fatal - Sistema automático de Reenvíos de Opera",
   confirmation: "Confirmación reenvio - Factura ",
 };
 
 const bodyTemplates = {
-  BDAT: `Muchas gracias por haber confiado en The Tais Bahia Del Duque.
+  BDAT: `Estimado cliente,
+  <br>Muchas gracias por haber confiado en The Tais Bahia Del Duque.
   <br>Adjunto encontrará su factura.
   <br>Esperamos volver a verles de nuevo.
   <br>Un cordial saludo,
@@ -45,18 +49,24 @@ const bodyTemplates = {
     return `Ha fallado el envío de la factura al cliente:  
     <b>${clientMail}</b>.<br>Por alguno de los siguientes motivos:
     <br><ul><li>La dirección de correo electrónico está mal escrita o incompleta.</li><li>La dirección de correo no existe.</li></ul>
-    Revise la información proporcionada e intente reenviar el email con la factura,
+    Revise el email del cliente y reenvie la factura a traves del correo.
     <br>Atentamente, el departamento de Informática.`;
   },
   SPF: (clientMail) => {
     return `Ha fallado el envío de la factura al cliente: 
     <b>${clientMail}</b>. Por el siguiente motivo:
-    <br><ul><li>Las configuración de las políticas de seguridad de la cuenta del cliente, impiden el envío a esa dirección.</li></ul>
-    No es posible entregar nigún email a esa dirección, lamentamos las molestias
-    <br>Atentamente, el departamento de Informática`;
+    <br><ul><li>Las configuración de las políticas de seguridad de la cuenta del cliente impiden el envío a esa dirección desde Opera.</li></ul>
+    Debe reenviar la factura a través del correo.
+    <br>Atentamente, el departamento de Informática.`;
+  },
+  NotFound: (clientMail) => {
+    return `Ha fallado el envío de la factura al cliente: 
+    <b>${clientMail}</b>. Se realizó el envío el ${GetExecutionTime()}
+    <br>Debe reenviar la factura a través del correo.
+    <br><br>Atentamente, el departamento de Informática.`;
   },
   confirmation:
-    "Se ha enviado correctamente el email fallido junto a su factura correspondiente.<br><br>Atentamente, el departamento de Informática",
+    "Se ha detectado un error durante el envío. Se ha corregido y enviado la factura al cliente.<br><br>Atentamente, el departamento de Informática",
 };
 
 // Buffer de logs
@@ -64,7 +74,7 @@ let logBuffer = []; // Estructura [["texto", variable], ["texto", variable]]
 const log = (register) => logBuffer.push(register, "\n\n\n");
 
 // Timeout Para crear Delay
-const delay = 1000 * 10;
+const delay = 1000 * 140;
 
 //////////// FUNCIONES
 function SearchForPart(object, key, wanted_value) {
@@ -155,6 +165,14 @@ async function SendITMailConfirmation(composeDetails) {
 
 function PrepareLogFile() {
   return new File(logBuffer, "error.log", { type: "text/plain" });
+}
+
+function GetExecutionTime(){
+  const currentDate = new Date();
+
+  const executionTime = new Date(currentDate - delay);
+
+  return executionTime.toLocaleString();
 }
 
 async function SendErrorReport() {
@@ -279,6 +297,32 @@ async function SendMessage(composeDetails) {
   console.log("Correo enviado con éxito.");
 }
 
+function OriginalNotFound(message){
+  // Recuperamos el cuerpo del correo
+  const mailBody = findEmailBody(message);
+
+  // Ejecutamos la regex para recuperar el email del cliente
+  const clientMail = mailBody.match(mailRegex);
+
+  if(!clientMail){
+    // Si no hay salimos, no deberia de ocurrir nunca
+    return
+  }
+
+  // Recuperamos la identidad de la cuenta de noreply
+  const accountIdentity = GetAccountIdentity(message.headers.to);
+
+  const composeDetails = {
+    to: mails.IT_mails.concat(mails.reception), // Enviar al destinatario original
+    subject: subjectTemplates.NotFound,
+    body: bodyTemplates.NotFound(clientMail),
+    identityId: accountIdentity,
+  }
+
+  // Enviamos el mensaje
+  SendMessage(composeDetails);
+}
+
 async function CreateMessage(messageFull) {
   const originalMessageID = GetInReplyToID(messageFull);
 
@@ -291,11 +335,13 @@ async function CreateMessage(messageFull) {
   // Si no esta el original salimos
   if (!originalMessage || !originalMessage.length === 0) {
     // Registramos el error.
-    log("Mensaje original no encontrado, omitiendo...");
-    console.log("Mensaje original no encontrado, omitiendo...");
+    log("Mensaje original no encontrado, procesando...");
+    console.log("Mensaje original no encontrado, procesando...");
 
-    // Antes de salir del bucle, mandamos un informe de error.
-    SendErrorReport();
+    // Procesamos el mensaje para informar de que no se encontró el original.
+    OriginalNotFound(messageFull);
+
+    // Salimos de la función ya que el nuevo flujo se encarga de todo.
     return;
   }
 

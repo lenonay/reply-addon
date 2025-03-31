@@ -1,8 +1,8 @@
-{
+﻿{
     "manifest_version": 2,
     "name": "Opera Mailing",
     "description": "Analiza correos entrantes, en búsqueda de errores de DNS, BDAT y SPF.",
-    "version": "3.0",
+    "version": "4.0",
     "author": "lenonay",
     "browser_specific_settings": {
         "gecko": {
