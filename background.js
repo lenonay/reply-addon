@@ -49,20 +49,24 @@ const bodyTemplates = {
     return `Ha fallado el envío de la factura al cliente:  
     <b>${clientMail}</b>.<br>Por alguno de los siguientes motivos:
     <br><ul><li>La dirección de correo electrónico está mal escrita o incompleta.</li><li>La dirección de correo no existe.</li></ul>
-    Revise el email del cliente y reenvie la factura a traves de Outlook.
-    <br>Atentamente.`;
+    <br><b>SOLUCIÓN:</b>
+    <br>Revise el email del cliente y reenvie la factura a traves de Outlook.
+    <br><br>Atentamente.`;
   },
   SPF: (clientMail) => {
     return `Ha fallado el envío de la factura al cliente: 
     <b>${clientMail}</b>. Por el siguiente motivo:
     <br><ul><li>Las configuración de las políticas de seguridad de la cuenta del cliente impiden el envío a esa dirección desde Opera.</li></ul>
-    Debe reenviar la factura a través de Outlook.
-    <br>Atentamente.`;
+    <br><b>SOLUCIÓN:</b>
+    <br>Debe reenviar la factura a través de Outlook.
+    <br><br>Atentamente.`;
   },
   NotFound: (clientMail) => {
     return `Ha fallado el envío de la factura al cliente: 
-    <b>${clientMail}</b>. Se realizó el envío el ${GetExecutionTime()}
-    <br><br>Debe reenviar la factura a través de Outlook.
+    <b>${clientMail}</b>.
+    <br><br>Se realizó el envío el ${GetExecutionTime()}
+    <br><br><b>SOLUCIÓN:</b>
+    <br>Debe reenviar la factura a través de Outlook.
     <br><br>Atentamente.`;
   },
   confirmation:
