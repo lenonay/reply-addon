@@ -55,7 +55,7 @@ const bodyTemplates = {
   },
   SPF: (clientMail) => {
     return `Ha fallado el envío de la factura al cliente: 
-    <b>${clientMail}</b>. Por el siguiente motivo:
+    <b>${clientMail}</b>.<br> Por el siguiente motivo:
     <br><ul><li>Las configuración de las políticas de seguridad de la cuenta del cliente impiden el envío a esa dirección desde Opera.</li></ul>
     <br><b>SOLUCIÓN:</b>
     <br>Debe reenviar la factura a través de Outlook.
