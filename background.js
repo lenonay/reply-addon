@@ -1,8 +1,8 @@
 ﻿// Variables globales de configuración
 const mails = {
   sourceMail: "noreply@grupocio.onmicrosoft.com",
-  IT_mails: ["diegolagerms@gmail.com", "jcarlos.perez@bahia-duque.com", "daniel.garcia@bahia-duque.com"],
-  reception: [],
+  IT_mails: ["jcarlos.perez@bahia-duque.com", "daniel.garcia@bahia-duque.com"],
+  reception: ["diegolagerms@gmail.com"],
 };
 
 const mailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/;
@@ -314,7 +314,7 @@ async function OriginalNotFound(message){
   const accountIdentity = await GetAccountIdentity(message.headers.to);
 
   const composeDetails = {
-    to: mails.IT_mails.concat(mails.reception), // Enviar al destinatario original
+    to: mails.IT_mails.concat(mails.reception), // Enviamos a IT y a Recepción
     subject: subjectTemplates.NotFound,
     body: bodyTemplates.NotFound(clientMail),
     identityId: accountIdentity,
@@ -386,8 +386,9 @@ async function ProcessBDAT(message) {
   // Enviamos el mensaje al cliente
   await SendMessage(composeDetails);
 
+  // Anulado para evitar el envío
   // Enviamos la confirmación de envio
-  await SendITMailConfirmation(composeDetails);
+  // await SendITMailConfirmation(composeDetails);
 }
 
 async function ProcessDNS(message) {
