@@ -22,8 +22,8 @@ const bodyFilters = {
 
 const subjectTemplates = {
   BDAT: "Hotel Bahia del Duque - Factura / Invoice",
-  DNS: "Error DNS - Sistema automático de Reenvíos de Opera",
-  SPF: "Error SPF - Sistema automático de Reenvíos de Opera",
+  DNS: "Error de Envío - Sistema automático de Reenvíos de Opera",
+  SPF: "Error de Envío - Sistema automático de Reenvíos de Opera",
   NotFound: "Error de Envío - Sistema automático de Reenvíos de Opera",
   report: "Error Fatal - Sistema automático de Reenvíos de Opera",
   confirmation: "Confirmación reenvio - Factura ",
@@ -49,21 +49,21 @@ const bodyTemplates = {
     return `Ha fallado el envío de la factura al cliente:  
     <b>${clientMail}</b>.<br>Por alguno de los siguientes motivos:
     <br><ul><li>La dirección de correo electrónico está mal escrita o incompleta.</li><li>La dirección de correo no existe.</li></ul>
-    Revise el email del cliente y reenvie la factura a traves del correo.
-    <br>Atentamente, el departamento de Informática.`;
+    Revise el email del cliente y reenvie la factura a traves de Outlook.
+    <br>Atentamente.`;
   },
   SPF: (clientMail) => {
     return `Ha fallado el envío de la factura al cliente: 
     <b>${clientMail}</b>. Por el siguiente motivo:
     <br><ul><li>Las configuración de las políticas de seguridad de la cuenta del cliente impiden el envío a esa dirección desde Opera.</li></ul>
-    Debe reenviar la factura a través del correo.
-    <br>Atentamente, el departamento de Informática.`;
+    Debe reenviar la factura a través de Outlook.
+    <br>Atentamente.`;
   },
   NotFound: (clientMail) => {
     return `Ha fallado el envío de la factura al cliente: 
     <b>${clientMail}</b>. Se realizó el envío el ${GetExecutionTime()}
-    <br>Debe reenviar la factura a través del correo.
-    <br><br>Atentamente, el departamento de Informática.`;
+    <br><br>Debe reenviar la factura a través de Outlook.
+    <br><br>Atentamente.`;
   },
   confirmation:
     "Se ha detectado un error durante el envío. Se ha corregido y enviado la factura al cliente.<br><br>Atentamente, el departamento de Informática",
@@ -74,7 +74,7 @@ let logBuffer = []; // Estructura [["texto", variable], ["texto", variable]]
 const log = (register) => logBuffer.push(register, "\n\n\n");
 
 // Timeout Para crear Delay
-const delay = 1000 * 140;
+const delay = 1000 * 65;
 
 //////////// FUNCIONES
 function SearchForPart(object, key, wanted_value) {
